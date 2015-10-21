@@ -13,42 +13,36 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Envelope;
-import com.rabbitmq.client.QueueingConsumer;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
+import java.util.ArrayList;
 import rabbitMQ.QueueConsumer;
 
 public class MainActivity extends AppCompatActivity {
 
-    private String[] monthsArray = { "JAN", "FEB", "MAR", "APR", "MAY", "JUNE", "JULY",
-            "AUG", "SEPT", "OCT", "NOV", "DEC" };
+    private ArrayList<String> mensajesarray = new ArrayList<String>();
 
-    private ListView monthsListView;
+    private ListView mensajesview;
     private ArrayAdapter arrayAdapter;
-    //Thread thread;
+    private Toolbar toolbar;
+
+    //RabbitMQ listener handler
     QueueConsumer listenerHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+
+        //agrego elementos
+        mensajesarray.add("Mensajes here...");
+
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -59,14 +53,21 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        monthsListView = (ListView) findViewById(R.id.mensajes);
-        arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, monthsArray);
-        monthsListView.setAdapter(arrayAdapter);
+        /*Defino boton de pruebas
+        Button btn = (Button) findViewById(R.id.button);
+        View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mensajesarray.add("nuevo elemento...");
+                arrayAdapter.notifyDataSetChanged();
+            }
+        };
+        btn.setOnClickListener(listener);
+*/
 
-
-
-
-        Log.d("AAAAAAAAA", "Conectando...!...");
+        mensajesview = (ListView) findViewById(R.id.mensajes);
+        arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, mensajesarray);
+        mensajesview.setAdapter(arrayAdapter);
 
 
         try{
@@ -76,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
                     String mensaje = new String(body,"utf-8");
                     //TextView tv = (TextView) findViewById(R.id.textView);
                     //tv.append(mensaje);
-                    Log.d("RABBITMQ", "MENSAJE RECIBIDO");
                     Log.d("RABBITMQ",mensaje);
 
                     Message msg = handler.obtainMessage();
@@ -95,36 +95,14 @@ public class MainActivity extends AppCompatActivity {
 
         new Consumidor().execute();
 
-        ///setupConnectionFactory();
-
-        /*
-        final Handler incomingMessageHandler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                String message = msg.getData().getString("msg");
-                TextView tv = (TextView) findViewById(R.id.textView);
-                Date now = new Date();
-                SimpleDateFormat ft = new SimpleDateFormat ("hh:mm:ss");
-                tv.append(ft.format(now) + ' ' + message + '\n');
-            }
-        };*/
-
-
-
-
-            //Log.d("SUSC","SUSBCRIBIENDO>...");
-        //subscribe(incomingMessageHandler);
-
     }
 
 
     final Handler handler = new Handler() {
         public void handleMessage(Message msg) {
             String message = msg.getData().getString("msg");
-            TextView tv = (TextView) findViewById(R.id.textView);
-            Date now = new Date();
-            SimpleDateFormat ft = new SimpleDateFormat ("hh:mm:ss");
-            tv.append(ft.format(now) + ' ' + message + '\n');
+            mensajesarray.add(0,message);
+            arrayAdapter.notifyDataSetChanged();
         }
     };
 
